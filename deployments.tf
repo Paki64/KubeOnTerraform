@@ -49,11 +49,8 @@ resource "kubernetes_deployment" "frontend" {
   }
 }
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> origin/main
 # BACKEND
 resource "kubernetes_deployment" "backend" {
   metadata {
