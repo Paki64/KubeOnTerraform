@@ -18,6 +18,7 @@ resource "kubernetes_service" "frontend-service" {
 }
 
 
+
 # BACKEND
 resource "kubernetes_service" "backend-service" {
   metadata {

@@ -4,6 +4,8 @@ variable "namespace" {
   default     = "tflab-ns"
 }
 
+
+
 # FRONTEND
 
 variable "frontend_deployment_name" {
@@ -29,6 +31,8 @@ variable "frontend_service_label" {
   type        = string
   default     = "tflab-frontend-svc"
 }
+
+
 
 # BACKEND
 
