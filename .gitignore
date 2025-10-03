@@ -1,6 +1,0 @@
-.terraform
-backend/node_modules
-TODO.txt
-*.tfstate
-*.tfstate.backup
-.gitignore
