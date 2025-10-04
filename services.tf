@@ -20,7 +20,7 @@ resource "kubernetes_service" "frontend-service" {
 
 
 # BACKEND
-resource "kubernetes_service" "backend-service" {
+resource "kubernetes_service" "backend_service" {
   metadata {
     name      = "backend-service"
     namespace = var.namespace
@@ -33,8 +33,11 @@ resource "kubernetes_service" "backend-service" {
       app = var.backend_app_label
     }
     port {
+      name        = "http"
       port        = 3000
       target_port = 3000
+      protocol    = "TCP"
     }
+    type = "ClusterIP"
   }
 }

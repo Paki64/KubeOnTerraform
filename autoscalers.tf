@@ -1,4 +1,4 @@
-# Frontend HPA
+# FRONTEND
 resource "kubernetes_horizontal_pod_autoscaler_v2" "frontend_hpa" {
   metadata {
     name      = "frontend-hpa"
@@ -40,14 +40,24 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
       name        = var.backend_deployment_name
     }
     min_replicas = 2
-    max_replicas = 6
+    max_replicas = 5
     metric {
       type = "Resource"
       resource {
         name = "cpu"
         target {
           type                = "Utilization"
-          average_utilization = 50
+          average_utilization = 70
+        }
+      }
+    }
+    metric {
+      type = "Resource"
+      resource {
+        name = "memory"
+        target {
+          type                = "Utilization"
+          average_utilization = 80
         }
       }
     }
