@@ -4,6 +4,7 @@ resource "kubernetes_deployment" "frontend" {
     name = var.frontend_deployment_name
     labels = {
       test = var.frontend_app_label
+      tier = "frontend"
     }
     namespace = var.namespace
   }
@@ -17,6 +18,7 @@ resource "kubernetes_deployment" "frontend" {
       metadata {
         labels = {
           test = var.frontend_app_label
+          tier = "frontend"
         }
       }
       spec {
@@ -25,6 +27,7 @@ resource "kubernetes_deployment" "frontend" {
           name  = "frontend"
           port {
             container_port = 80
+            name           = "http"
           }
           resources {
             requests = {
@@ -36,17 +39,52 @@ resource "kubernetes_deployment" "frontend" {
               memory = "256Mi"
             }
           }
-          # Per far comunicare il frontend con il backend, 
-          # aggiungi una variabile d'ambiente che punti al servizio backend.
-          # Ad esempio, se il servizio backend si chiama "backend-service" sulla porta 3000:
           env {
             name  = "BACKEND_URL"
             value = "http://backend-service:3000"
+          }
+          env {
+            name  = "API_BASE_URL"
+            value = "/api"
+          }
+          volume_mount {
+            name       = "nginx-config"
+            mount_path = "/etc/nginx/conf.d/default.conf"
+            sub_path   = "nginx.conf"
+          }
+          liveness_probe {
+            http_get {
+              path = "/health"
+              port = 80
+            }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+            timeout_seconds       = 3
+            failure_threshold     = 3
+          }
+          readiness_probe {
+            http_get {
+              path = "/health"
+              port = 80
+            }
+            initial_delay_seconds = 5
+            period_seconds        = 5
+            timeout_seconds       = 3
+            failure_threshold     = 3
+          }
+        }
+        volume {
+          name = "nginx-config"
+          config_map {
+            name = kubernetes_config_map.frontend_config.metadata[0].name
           }
         }
       }
     }
   }
+  depends_on = [
+    kubernetes_config_map.frontend_config
+  ]
 }
 
 

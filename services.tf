@@ -3,17 +3,25 @@ resource "kubernetes_service" "frontend-service" {
   metadata {
     name      = "frontend-service"
     namespace = var.namespace
+    labels = {
+      app = var.frontend_app_label
+      tier = "frontend"
+    }
   }
   spec {
     selector = {
       test = var.frontend_app_label
     } 
     port {
+      name        = "http"
       port        = 8080
       target_port = 80
       node_port   = 30080
+      protocol    = "TCP"
     }
     type = "NodePort"
+    # Potenzialmente inutile per app Stateless
+    session_affinity = "ClientIP"
   }
 }
 
@@ -38,6 +46,7 @@ resource "kubernetes_service" "backend_service" {
       target_port = 3000
       protocol    = "TCP"
     }
+    # Accesso interno al cluster
     type = "ClusterIP"
   }
 }

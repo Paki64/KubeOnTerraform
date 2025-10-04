@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Full Stack App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-card {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .status-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .status-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-card.loading .value {
+            color: #999;
+        }
+
+        .status-card.error .value {
+            color: #e53e3e;
+        }
+
+        .items-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .items-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .item-card {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .item-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .item-card p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .item-card .price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #48bb78;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .api-info {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .api-info h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .api-endpoint {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sito di prova</h1>
+        </div>
+
+        <div class="status">
+            <div class="status-card" id="frontend-status">
+                <h3>Frontend Status</h3>
+                <div class="value">🟢 Online</div>
+            </div>
+            <div class="status-card loading" id="backend-status">
+                <h3>Backend Status</h3>
+                <div class="value">Checking...</div>
+            </div>
+            <div class="status-card loading" id="items-count">
+                <h3>Total Items</h3>
+                <div class="value">-</div>
+            </div>
+            <div class="status-card loading" id="total-value">
+                <h3>Total Value</h3>
+                <div class="value">-</div>
+            </div>
+        </div>
+
+        <div class="items-section">
+            <h2>Items from Backend API</h2>
+            
+            <div class="controls">
+                <button onclick="loadItems()">🔄 Refresh Items</button>
+                <button onclick="loadStats()">📊 Load Stats</button>
+                <button onclick="testBackend()">🔍 Test Backend</button>
+            </div>
+
+            <div id="error-message"></div>
+            <div id="items-container" class="items-grid"></div>
+        </div>
+
+        <div class="api-info">
+            <h2>API Endpoints</h2>
+            <div class="api-endpoint">GET /api/items - Get all items</div>
+            <div class="api-endpoint">GET /api/items/:id - Get single item</div>
+            <div class="api-endpoint">POST /api/items - Create new item</div>
+            <div class="api-endpoint">PUT /api/items/:id - Update item</div>
+            <div class="api-endpoint">DELETE /api/items/:id - Delete item</div>
+            <div class="api-endpoint">GET /api/stats - Get statistics</div>
+            <div class="api-endpoint">GET /api/users - Get users</div>
+            <div class="api-endpoint">POST /api/auth/login - Login</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                const data = await response.json();
+                
+                const statusCard = document.getElementById('backend-status');
+                statusCard.className = 'status-card';
+                statusCard.querySelector('.value').textContent = '🟢 Online';
+                
+                return true;
+            } catch (error) {
+                const statusCard = document.getElementById('backend-status');
+                statusCard.className = 'status-card error';
+                statusCard.querySelector('.value').textContent = '🔴 Offline';
+                
+                return false;
+            }
+        }
+
+        async function loadItems() {
+            const container = document.getElementById('items-container');
+            const errorDiv = document.getElementById('error-message');
+            
+            container.innerHTML = '<div class="loading">Loading items...</div>';
+            errorDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/items`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                const items = result.data;
+
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="loading">No items found</div>';
+                    return;
+                }
+
+                container.innerHTML = items.map(item => `
+                    <div class="item-card">
+                        <h3>${item.name}</h3>
+                        <p>${item.description}</p>
+                        <div class="price">$${item.price.toFixed(2)}</div>
+                    </div>
+                `).join('');
+
+                const countCard = document.getElementById('items-count');
+                countCard.className = 'status-card';
+                countCard.querySelector('.value').textContent = items.length;
+
+            } catch (error) {
+                console.error('Error loading items:', error);
+                container.innerHTML = '';
+                errorDiv.innerHTML = `<div class="error">❌ Error loading items: ${error.message}</div>`;
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const result = await response.json();
+                const stats = result.data;
+
+                const countCard = document.getElementById('items-count');
+                countCard.className = 'status-card';
+                countCard.querySelector('.value').textContent = stats.totalItems;
+
+                const valueCard = document.getElementById('total-value');
+                valueCard.className = 'status-card';
+                valueCard.querySelector('.value').textContent = `$${stats.totalValue.toFixed(2)}`;
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function testBackend() {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                const data = await response.json();
+                
+                errorDiv.innerHTML = `
+                    <div style="background: #c6f6d5; color: #22543d; padding: 15px; border-radius: 6px;">
+                        ✅ Backend is working!<br>
+                        Version: ${data.version}<br>
+                        Message: ${data.message}
+                    </div>
+                `;
+            } catch (error) {
+                errorDiv.innerHTML = `<div class="error">❌ Backend connection failed: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkBackend();
+            await loadItems();
+            await loadStats();
+        });
+
+        // Auto-refresh every 30 seconds
+        setInterval(async () => {
+            await checkBackend();
+            await loadStats();
+        }, 30000);
+    </script>
+</body>
+</html>

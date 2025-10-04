@@ -15,7 +15,7 @@ variable "frontend_deployment_name" {
 variable "frontend_image" {
   description = "The Docker image for the frontend"
   type        = string
-  default     = "nginx:1.21.6"
+  default     = "paki13/tflab-frontend:latest"
 }
 variable "frontend_app_label" {
   description = "App label for Kubernetes resources"
@@ -38,7 +38,7 @@ variable "backend_deployment_name" {
 variable "backend_image" {
   description = "The Docker image for the backend"
   type        = string
-  default     = "paki13/tflab-backend:latest"
+  default     = "paki13/tflab-backend:1.0"
 }
 variable "backend_app_label" {
   description = "App label for Kubernetes resources"
